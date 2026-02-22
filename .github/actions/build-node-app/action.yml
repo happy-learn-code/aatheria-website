@@ -1,0 +1,67 @@
+name: 'Build Node.js Application'
+description: 'Set up Node.js, install dependencies, run tests, and build the application'
+
+inputs:
+  node-version:
+    description: 'Node.js version to use'
+    required: true
+  caching:
+    description: 'Enable dependency caching'
+    required: false
+    default: 'true'
+  vite-base-path:
+    description: 'Base path for Vite build'
+    required: false
+    default: '/'
+
+outputs:
+  build-dir:
+    description: 'Directory where the build artifacts are stored'
+    value: ${{ steps.build.outputs.build-dir }}
+  used-cache:
+    description: 'Whether cache was used for dependencies'
+    value: ${{ steps.load-and-cache-npm-dependencies.outputs.used-cache }}
+
+runs:
+  using: 'composite'
+  steps:
+    # Step 1: Set up Node.js environment with specified version
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ inputs.node-version }}
+    
+    # Step 2: Load and cache NPM dependencies using custom action
+    - name: Load and Cache NPM dependencies
+      uses: ./.github/actions/cache-deps
+      id: load-and-cache-npm-dependencies
+      with:  
+        node-version: ${{ inputs.node-version }}
+        caching: ${{ inputs.caching }}
+
+    # Step 3: Display whether cache was used or dependencies were installed fresh
+    - name: Output Caching Info
+      shell: bash
+      run: |
+        echo "Used Cache: ${{ steps.load-and-cache-npm-dependencies.outputs.used-cache }}"
+
+    # Step 4: Run all test suites to ensure code quality
+    - name: Run Tests
+      shell: bash
+      run: npm run test
+
+    # Step 5: Lint the codebase to enforce coding standards
+    - name: Run Linter
+      shell: bash
+      run: npm run lint  
+
+    # Step 6: Build the application and store the build directory path as output
+    - name: Build Application
+      id: build
+      shell: bash
+      env:
+        VITE_BASE_PATH: ${{ inputs.vite-base-path }}
+      run: |
+        npm run build
+        # Store the build directory name in GitHub Actions output for reuse
+        echo "build-dir=build" >> $GITHUB_OUTPUT
