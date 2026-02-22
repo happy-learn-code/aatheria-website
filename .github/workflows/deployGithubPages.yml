@@ -38,7 +38,7 @@ jobs:
               uses: peaceiris/actions-gh-pages@v3
               with:
                 github_token: ${{ secrets.AATHERIA_ACCESS_TOKEN }}
-                publish_dir: ./build
+                publish_dir: ./dist
                 publish_branch: gh-pages
                 force_orphan: true
                 user_name: 'github-actions[bot]'
