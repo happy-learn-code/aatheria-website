@@ -1,0 +1,45 @@
+name: Deployment To github Pages
+
+on:
+    workflow_dispatch:
+
+permissions:
+    contents: write
+
+concurrency:
+    group: "pages"
+    cancel-in-progress: false
+
+jobs:
+    build-and-deploy:
+        runs-on: self-hosted
+
+        strategy:
+            matrix:
+                node-version: [25.5.0]
+
+        steps:
+            - uses: actions/checkout@v4
+
+            - uses: actions/setup-node@v4
+              with:
+                node-version: ${{ matrix.node-version }}
+
+            - run: npm ci
+
+            - name: Build for GitHub Pages
+              env:
+                VITE_BASE_PATH: /aatheria/
+              run: npm run build
+
+            - run: npm run test
+
+            - name: Deploy to GitHub Pages
+              uses: peaceiris/actions-gh-pages@v3
+              with:
+                github_token: ${{ secrets.AATHERIA_ACCESS_TOKEN }}
+                publish_dir: ./build
+                publish_branch: gh-pages
+                force_orphan: true
+                user_name: 'github-actions[bot]'
+                user_email: 'github-actions[bot]@users.noreply.github.com'

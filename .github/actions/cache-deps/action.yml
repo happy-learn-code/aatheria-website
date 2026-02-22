@@ -1,0 +1,44 @@
+name: 'Get and Cache Dependencies'
+description: 'An action to get and cache dependencies (via NPM)for various package managers'
+
+inputs:
+  node-version:
+    description: 'The Node.js version to use'
+    required: false
+    default: '25.2.1'
+  caching:
+    description: 'Enable or disable caching of dependencies'
+    required: false
+    default: 'true'
+
+outputs:
+  used-cache:
+    description: 'Whether the cache was used or not'
+    value: ${{ steps.set-cache-output.outputs.used-cache || steps.install-deps.outputs.used-cache }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Cache NPM dependencies
+      id: cache-deps
+      if: ${{ inputs.caching == 'true' }}
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.npm
+          node_modules
+        key: ${{ runner.os }}-node-${{ inputs['node-version'] }}-${{ hashFiles('**/package-lock.json') }}
+
+    - name: Install NPM dependencies
+      id: install-deps
+      if: steps.cache-deps.outputs.cache-hit != 'true' || inputs.caching != 'true'
+      run: |
+        npm ci
+        echo "used-cache='false'" >> $GITHUB_OUTPUT
+      shell: bash
+
+    - name: Set cache output when cache hit
+      id: set-cache-output
+      if: steps.cache-deps.outputs.cache-hit == 'true'
+      run: echo "used-cache='true'" >> $GITHUB_OUTPUT
+      shell: bash
