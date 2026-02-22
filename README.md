@@ -40,3 +40,6 @@ See **EMAILJS_SETUP.md** for the full guide. Quick version:
 ## Design System
 - Fonts: Cormorant Garamond + DM Sans
 - Colors: Deep Navy #0B1526 · Gold #C9A84C · Cream #F9F6F0
+
+## Github Runner 
+C:\Opt\GITHUB\runner\run.cmd
